@@ -30,7 +30,8 @@ function drawBackground() {
     blue: "#b8d9ee",
     red: "#b7495b",
     checkered: "#f9d5e1",
-    draw: "#fff4e5"
+    draw: "#fff4e5",
+    image: "#fff4e5"
   };
 
   ctx.fillStyle = colors[bg];
@@ -47,6 +48,8 @@ function drawBackground() {
       }
     }
   }
+
+  if (bg === "image") drawImportedBackground();
 
   if (bg === "draw") {
     ctx.drawImage(drawing, 0, 0, W, H);
@@ -189,7 +192,7 @@ function drawCamera() {
     ctx.fillRect(x, y, w, h);
     ctx.textAlign = "center";
     ctx.fillStyle = "#a45170";
-    ctx.font = "bold 23px Nunito";
+    ctx.font = "bold 23px sans-serif";
     ctx.fillText("🐝 turn on your camera ♡", x+w/2, y+h/2);
   }
 
@@ -291,9 +294,11 @@ function drawLyrics() {
   ctx.fillStyle = $("textColor").value;
   ctx.textAlign = "left";
 
-  ctx.font = "bold 30px Nunito";
+  ctx.font = "bold 30px sans-serif";
   ctx.fillText("♫ my little song", 570, 113);
 
+  ctx.textAlign = $("textAlign").value;
+  const textX = ctx.textAlign === "center" ? 742.5 : ctx.textAlign === "right" ? 915 : 570;
   let y = 170;
 
   // Recorta o texto para não ultrapassar a área.
@@ -304,7 +309,7 @@ function drawLyrics() {
   if (showChords) {
     y = drawWrappedText(
       $("chords").value,
-      570, y, 345, +$("textSize").value*1.4, `bold ${$("textSize").value}px monospace`
+      textX, y, 345, +$("textSize").value*1.4, canvasTextFont("chords")
     );
     y += 15;
   }
@@ -312,7 +317,7 @@ function drawLyrics() {
   if (showLyrics) {
     drawWrappedText(
       $("lyrics").value,
-      570, y, 345, +$("textSize").value*1.5, `${$("textSize").value}px Nunito`
+      textX, y, 345, +$("textSize").value*1.5, canvasTextFont("lyrics")
     );
   }
 
@@ -332,7 +337,7 @@ function render() {
 
   ctx.fillStyle = "#81445a";
   ctx.textAlign = "center";
-  ctx.font = "bold 16px Nunito";
+  ctx.font = "bold 16px sans-serif";
   ctx.fillText("made with love ♡ cam bee", W/2, H-19);
 
   requestAnimationFrame(render);
@@ -382,52 +387,26 @@ $("clearDrawing").onclick = () => {
 
 // -------- CÂMERA --------
 
-$("cameraBtn").onclick = async () => {
-  $("cameraBtn").disabled = true;
-  $("recordBtn").disabled = true;
-  try {
-    if (cameraStream) {
-      cameraStream.getTracks().forEach(track => track.stop());
-    }
-
-    cameraStream = await navigator.mediaDevices.getUserMedia({
-      video: { width: 1280, height: 720 },
-      audio: true
-    });
-
-    video.srcObject = cameraStream;
-    await video.play();
-
-    $("recordBtn").disabled = false;
-    $("status").textContent = "Câmera ligada! Ready to sing? ♡";
-
-  } catch (error) {
-    console.error(error);
-    $("status").textContent =
-      "Não consegui acessar câmera/microfone. Confira as permissões e use localhost ou HTTPS.";
-    if (cameraStream) cameraStream.getTracks().forEach(track => track.stop());
-    cameraStream = null;
-  } finally {
-    $("cameraBtn").disabled = false;
-  }
-};
+$("cameraBtn").onclick = connectDevices;
 
 // -------- GRAVAÇÃO --------
 
 $("recordBtn").onclick = async () => {
-  if (!cameraStream || !window.MediaRecorder) {
-    alert("Seu navegador não suporta essa gravação.");
+  if (recordingPreparing || recorder?.state === "recording") return;
+  if (!canRecord()) {
+    $("status").textContent = "Para gravar, aguarde as fontes e conecte câmera e microfone ativos. É necessário suporte a MediaRecorder e captureStream.";
     return;
   }
 
-  $("recordBtn").disabled = true;
-  $("cameraBtn").disabled = true;
+  recordingPreparing = true;
+  refreshStudioControls();
   let output;
   let recordingFailed = false;
   try {
-    audioContext = new AudioContext();
+    audioContext = new (window.AudioContext || window.webkitAudioContext)();
     await audioContext.resume();
 
+    if (!hasLiveTrack("video") || !hasLiveTrack("audio")) throw new Error("Dispositivo desconectado antes da gravação.");
     audioSource = audioContext.createMediaStreamSource(cameraStream);
     audioDestination = audioContext.createMediaStreamDestination();
     audioSource.connect(audioDestination);
@@ -478,10 +457,10 @@ $("recordBtn").onclick = async () => {
       audioSource.disconnect();
       audioContext.close();
 
-      $("recordBtn").disabled = false;
-      $("cameraBtn").disabled = false;
+      recordingPreparing = false;
+      refreshStudioControls();
       $("stopBtn").disabled = true;
-      $("status").textContent = recordingFailed ? "Gravação interrompida; confira o arquivo parcial." : "Seu cover foi salvo! ♡";
+      $("status").textContent = (recordingFailed || recorder.interrupted) ? "Gravação interrompida; confira o arquivo parcial." : "Seu cover foi salvo! ♡";
     };
 
     recorder.onerror = event => {
@@ -491,6 +470,8 @@ $("recordBtn").onclick = async () => {
       if (recorder.state !== "inactive") recorder.stop();
     };
     recorder.start(1000);
+    recordingPreparing = false;
+    refreshStudioControls();
     $("recordBtn").disabled = true;
     $("stopBtn").disabled = false;
     $("status").textContent = "🔴 Gravando seu cover...";
@@ -500,8 +481,8 @@ $("recordBtn").onclick = async () => {
     $("status").textContent = "Erro ao iniciar a gravação.";
     if(output) output.getTracks().forEach(track => track.stop());
     if(audioSource) audioSource.disconnect();
-    $("recordBtn").disabled = false;
-    $("cameraBtn").disabled = false;
+    recordingPreparing = false;
+    refreshStudioControls();
     if (audioContext && audioContext.state !== "closed") {
       audioContext.close();
     }
@@ -580,7 +561,7 @@ const decorationTypes = {
         drawWebcam(box.x,box.y,box.w,box.h,true,true);
       } else {
         ctx.fillStyle='#e9c9de'; ctx.fillRect(0,0,W,H);
-        ctx.fillStyle='#78334d'; ctx.textAlign='center'; ctx.font='16px Nunito';
+        ctx.fillStyle='#78334d'; ctx.textAlign='center'; ctx.font='16px sans-serif';
         ctx.fillText('Ligue a câmera',d.x,d.y);
       }
       ctx.restore();
@@ -698,4 +679,5 @@ canvas.addEventListener('pointermove',event=>{
 ['pointerup','pointercancel','lostpointercapture'].forEach(type=>canvas.addEventListener(type,()=>dragDecoration=null));
 $('centerCamera').onclick=()=>{$('cameraX').value=50;$('cameraY').value=50;};
 ['showLyrics','showChords'].forEach(id=>$(id).addEventListener('change',()=>{$('cameraX').value=50;$('cameraY').value=50;}));
+initializeStudio();
 render();

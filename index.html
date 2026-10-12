@@ -5,7 +5,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Cam Bee 🐝</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&amp;family=DM+Mono&amp;family=Fredoka:wght@400;700&amp;family=Nunito:wght@400;600;700;800;900&amp;family=Patrick+Hand&amp;family=Pixelify+Sans:wght@400;700&amp;family=Press+Start+2P&amp;family=Quicksand:wght@400;700&amp;family=Silkscreen:wght@400;700&amp;display=swap">
+  <link rel="stylesheet" href="style.css?v=0.3">
 </head>
 <body>
   <header class="topbar">
@@ -39,6 +42,13 @@
       <section class="window">
         <div class="window-title">✿ Camera</div>
         <div class="window-body fields">
+          <fieldset><legend>Câmera e microfone</legend>
+            <label>Câmera<select id="cameraDevice"><option value="">Padrão do navegador</option></select></label>
+            <label>Microfone<select id="microphoneDevice"><option value="">Padrão do navegador</option></select></label>
+            <button id="refreshDevices" type="button">Atualizar dispositivos</button>
+            <p class="hint">Após escolher, clique em Ligar câmera para aplicar e autorizar o acesso.</p>
+            <p id="deviceStatus" class="hint" role="status"></p>
+          </fieldset>
           <label>Filtro
             <select id="filter">
               <option value="none">Original</option>
@@ -91,10 +101,20 @@
               <option value="blue">Céu azul</option>
               <option value="red">Vermelho indie</option>
               <option value="checkered">Xadrez</option>
-              <option value="draw">Meu desenho</option>
+              <option value="draw">Meu desenho</option><option value="image">Imagem personalizada</option>
             </select>
           </label>
 
+          <fieldset><legend>Imagem personalizada</legend>
+            <button id="chooseBackground" type="button">Escolher imagem</button>
+            <input id="backgroundFile" type="file" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" hidden>
+            <p id="backgroundStatus" class="hint" role="status">JPG, PNG ou WebP. A imagem fica apenas neste navegador.</p>
+            <label>Modo<select id="backgroundFit"><option value="cover">Preencher</option><option value="contain">Ajustar</option><option value="stretch">Esticar</option></select></label>
+            <label>Zoom<input id="backgroundZoom" type="range" min="50" max="300" value="100"></label>
+            <label>Posição horizontal<input id="backgroundX" type="range" min="0" max="100" value="50"></label>
+            <label>Posição vertical<input id="backgroundY" type="range" min="0" max="100" value="50"></label>
+            <button id="removeBackground" type="button" disabled>Remover imagem</button>
+          </fieldset>
           <label>Desenhar no fundo
             <input id="penColor" type="color" value="#ed6483">
           </label>
@@ -123,6 +143,12 @@ sing with me ♡</textarea>
           <label><input id="showChords" type="checkbox"> Mostrar acordes</label>
           <textarea id="chords" rows="3" placeholder="G  Em  C  D"></textarea>
 
+          <label>Fonte da letra<select id="lyricsFont"></select></label>
+          <label>Fonte dos acordes<select id="chordsFont"></select></label>
+          <label>Alinhamento<select id="textAlign"><option value="left">Esquerda</option><option value="center">Centro</option><option value="right">Direita</option></select></label>
+          <label><input id="textBold" type="checkbox"> Negrito na letra</label>
+          <label><input id="chordsBold" type="checkbox" checked> Negrito nos acordes</label>
+          <p id="fontStatus" class="hint" role="status"></p>
           <label>Tamanho do texto<input id="textSize" type="range" min="14" max="36" value="22"></label>
           <label>Cor da letra
             <input id="textColor" type="color" value="#612d42">
@@ -133,6 +159,7 @@ sing with me ♡</textarea>
   </main>
 
   <footer>made with ♡ and a little bee 🐝</footer>
-  <script src="script.js"></script>
+  <script src="studio-features.js?v=0.3"></script>
+  <script src="script.js?v=0.3"></script>
 </body>
 </html>

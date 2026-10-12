@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&amp;family=DM+Mono&amp;family=Fredoka:wght@400;700&amp;family=Nunito:wght@400;600;700;800;900&amp;family=Patrick+Hand&amp;family=Pixelify+Sans:wght@400;700&amp;family=Press+Start+2P&amp;family=Quicksand:wght@400;700&amp;family=Silkscreen:wght@400;700&amp;display=swap">
-  <link rel="stylesheet" href="style.css?v=0.3.1">
+  <link rel="stylesheet" href="style.css?v=0.4">
 </head>
 <body>
   <header class="topbar">
@@ -92,13 +92,13 @@
           <label>Tamanho das bolinhas<input id="dotsSize" type="range" min="10" max="90" value="35"></label>
           <label>Tamanho das pétalas (%)<input id="sakuraSize" type="range" min="50" max="200" value="100"></label>
           <label>Intensidade<input id="effectAmount" type="range" min="0" max="100" value="85"></label>
-          <label>Cor das estrelas<input id="starColor" type="color" value="#ffe6a0"></label>
+          <label>Cor das estrelas<input id="starColor" type="color" value="#f6c63d"></label>
           </fieldset>
         </div></section>
       <section class="window"><div class="window-title">✎ Background</div><div class="window-body fields">
           <label>Fundo
             <select id="background">
-              <option value="cream">Baunilha</option>
+              <option value="cream">Baunilha</option><option value="honey">Mel</option><option value="lilac">Lavanda</option>
               <option value="pink">Moranguinho</option>
               <option value="blue">Céu azul</option>
               <option value="red">Vermelho indie</option>
@@ -118,7 +118,7 @@
             <button id="removeBackground" type="button" disabled>Remover imagem</button>
           </fieldset>
           <label>Desenhar no fundo
-            <input id="penColor" type="color" value="#ed6483">
+            <input id="penColor" type="color" value="#7a4c9a">
           </label>
           <canvas id="drawing" width="320" height="180"></canvas>
           <button id="clearDrawing">Apagar desenho</button>
@@ -146,6 +146,18 @@ sing with me ♡</textarea>
           <label><input id="showChords" type="checkbox"> Mostrar acordes</label>
           <textarea id="chords" rows="3" placeholder="G  Em  C  D"></textarea>
 
+          <fieldset><legend>Rolagem da letra</legend>
+            <label>Modo<select id="lyricsScrollMode"><option value="off">Desativada</option><option value="auto">Automática</option></select></label>
+            <label>Velocidade — lenta a rápida <output id="lyricsSpeedValue">20 px/s</output><input id="lyricsSpeed" type="range" min="5" max="80" value="20"></label>
+            <div class="lyric-actions"><button id="startLyrics" type="button">Iniciar / retomar</button><button id="pauseLyrics" type="button">Pausar</button><button id="restartLyrics" type="button">Reiniciar</button></div>
+            <p id="lyricsScrollStatus" class="hint" role="status">Rolagem desativada.</p>
+          </fieldset>
+          <fieldset><legend>Transição da letra</legend>
+            <label>Visibilidade<select id="lyricsFade"><option value="none">Sempre visível</option><option value="in">Aparecer suavemente</option><option value="out">Desaparecer suavemente</option></select></label>
+            <label>Duração <output id="lyricsFadeValue">1 s</output><input id="lyricsFadeDuration" type="range" min="0.5" max="3" step="0.5" value="1"></label>
+            <button id="replayLyricsFade" type="button">Repetir transição</button>
+            <p class="hint">Rolagem e transição são independentes. O título e os acordes ficam fixos. A gravação usa o estado atual da prévia.</p>
+          </fieldset>
           <label>Fonte da letra<select id="lyricsFont"></select></label>
           <label>Fonte dos acordes<select id="chordsFont"></select></label>
           <label>Alinhamento<select id="textAlign"><option value="left">Esquerda</option><option value="center">Centro</option><option value="right">Direita</option></select></label>
@@ -154,7 +166,7 @@ sing with me ♡</textarea>
           <p id="fontStatus" class="hint" role="status"></p>
           <label>Tamanho do texto<input id="textSize" type="range" min="14" max="36" value="22"></label>
           <label>Cor da letra
-            <input id="textColor" type="color" value="#612d42">
+            <input id="textColor" type="color" value="#2e173f">
           </label>
         </div>
       </section>
@@ -162,7 +174,8 @@ sing with me ♡</textarea>
   </main>
 
   <footer>made with ♡ and a little bee 🐝</footer>
-  <script src="studio-features.js?v=0.3.1"></script>
-  <script src="script.js?v=0.3.1"></script>
+  <script src="lyrics-motion.js?v=0.4"></script>
+  <script src="studio-features.js?v=0.4"></script>
+  <script src="script.js?v=0.4"></script>
 </body>
 </html>

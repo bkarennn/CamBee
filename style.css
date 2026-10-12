@@ -2,27 +2,34 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Mono&family=Nunito:wght@400;600;700;800;900&display=swap');
 
 :root {
-  --pink: #f6b8ca;
-  --darkpink: #a73c61;
-  --cream: #fff4e5;
-  --red: #a63546;
-  --ink: #573748;
+  --purple-dark: #2e173f;
+  --purple: #7a4c9a;
+  --lilac: #b98ac4;
+  --honey: #f6c63d;
+  --yellow-soft: #ffd95a;
+  --cream: #fff1d6;
+  --paper: #fffbf3;
+  --lilac-soft: #eee3f1;
+  --pattern: #e4d5b5;
+  --ink: var(--purple-dark);
+  --border: var(--purple);
+  --shadow: #c9b3d1;
 }
 
 * { box-sizing: border-box; }
 
 body {
   margin: 0;
-  background: #f9dce4;
-  background-image: radial-gradient(#e9a9bc 1.2px, transparent 1.2px);
+  background: var(--cream);
+  background-image: radial-gradient(var(--pattern) 1.2px, transparent 1.2px);
   background-size: 20px 20px;
   color: var(--ink);
   font-family: 'Nunito', sans-serif;
 }
 
 .topbar {
-  background: #a33e5b;
-  color: white;
+  background: var(--purple-dark);
+  color: var(--cream);
   padding: 15px 25px;
   display: flex;
   justify-content: space-between;
@@ -30,7 +37,7 @@ body {
   gap: 12px;
   font-weight: 900;
   font-size: 22px;
-  border-bottom: 5px solid #7c2d49;
+  border-bottom: 5px solid var(--purple);
 }
 
 .topbar small {
@@ -55,30 +62,30 @@ body {
 }
 
 .window {
-  background: var(--cream);
-  border: 3px solid #8b4962;
-  box-shadow: 6px 6px 0 #b77690;
+  background: var(--paper);
+  border: 3px solid var(--border);
+  box-shadow: 6px 6px 0 var(--shadow);
   overflow: hidden;
 }
 
 .window-title {
-  background: linear-gradient(90deg, #c96e90, #f2afc8);
-  border-bottom: 3px solid #8b4962;
+  background: var(--purple-dark);
+  border-bottom: 3px solid var(--border);
   padding: 10px 15px;
   display: flex;
   justify-content: space-between;
   font-family: 'DM Mono', monospace;
   font-size: 13px;
   font-weight: bold;
-  color: #fff;
+  color: var(--cream);
 }
 
 .window-body { padding: 17px; }
 
 .stage {
-  background: #edb3c9;
+  background: var(--lilac-soft);
   padding: 8px;
-  border: 3px inset #ae6d87;
+  border: 3px inset var(--border);
 }
 
 #canvas {
@@ -86,7 +93,7 @@ body {
   width: 100%;
   height: auto;
   aspect-ratio: 16 / 9;
-  background: #fff4e5;
+  background: var(--cream);
 }
 
 .settings {
@@ -116,8 +123,8 @@ body {
 
 select, textarea, input[type="color"], input[type="text"] {
   width: 100%;
-  border: 2px solid #bc8197;
-  background: #fffaf5;
+  border: 2px solid var(--border);
+  background: var(--paper);
   color: var(--ink);
   padding: 8px;
   border-radius: 5px;
@@ -132,26 +139,26 @@ input[type="color"] {
 }
 
 input[type="checkbox"] {
-  accent-color: var(--darkpink);
+  accent-color: var(--purple);
   width: 17px;
   height: 17px;
 }
 
 button {
-  border: 3px solid #943b5d;
-  background: linear-gradient(#ffd6e3, #f0a1bd);
-  color: #78334d;
+  border: 3px solid var(--purple);
+  background: var(--lilac);
+  color: var(--purple-dark);
   border-radius: 24px;
   padding: 11px 16px;
   cursor: pointer;
   font-family: 'Nunito', sans-serif;
   font-weight: 900;
-  box-shadow: 2px 4px 0 #a7647f;
+  box-shadow: 2px 4px 0 var(--shadow);
   transition: transform .12s, box-shadow .12s;
 }
 
 button:hover:not(:disabled) {
-  background: #ffe5ec;
+  background: var(--lilac-soft);
   transform: translateY(-2px);
 }
 
@@ -173,15 +180,15 @@ button:disabled {
 }
 
 #recordBtn {
-  background: #d84f70;
-  color: white;
+  background: var(--honey);
+  color: var(--purple-dark);
 }
 
 #drawing {
   width: 100%;
   height: auto;
-  background: #fff;
-  border: 2px dashed #b87991;
+  background: var(--paper);
+  border: 2px dashed var(--purple);
   cursor: crosshair;
   touch-action: none;
 }
@@ -189,7 +196,7 @@ button:disabled {
 #status {
   text-align: center;
   font-size: 13px;
-  color: #98546b;
+  color: var(--purple);
 }
 
 footer {
@@ -204,17 +211,33 @@ footer {
 }
 
 /* V0.2: controles de scrapbook */
-fieldset { border: 2px dashed #bc8197; display: grid; gap: 12px; min-width: 0; }
+fieldset { border: 2px dashed var(--border); display: grid; gap: 12px; min-width: 0; }
 legend { font-weight: 800; }
-input[type="range"] { width: 100%; accent-color: var(--darkpink); }
+input[type="range"] { width: 100%; accent-color: var(--purple); }
 .sprite-palette { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-.sprite-palette button { padding: 5px; border-radius: 8px; background: #fffaf5; }
+.sprite-palette button { padding: 5px; border-radius: 8px; background: var(--paper); }
 .sprite-palette canvas { width: 100%; height: auto; display: block; }
 .hint, #assetStatus { font-size: 12px; margin: 0; }
 #canvas { touch-action: none; }
-button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 3px solid #78334d; outline-offset: 3px; }
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 3px solid var(--purple-dark); outline-offset: 3px; }
 @media (min-width: 851px) { .studio { position: sticky; top: 20px; } }
 
 /* Respeita a categoria selecionada mesmo em painéis com display: grid. */
 [hidden] { display: none !important; }
 #mirrorPalette .hint { margin-top: 10px; }
+
+/* Mel e lavanda: mesmos tokens em controles e superfícies. */
+.window { border-radius: 12px; }
+.window-title { color: var(--cream); }
+.topbar { border-bottom-color: var(--honey); }
+#cameraBtn, #startLyrics, #recordBtn { background: var(--honey); color: var(--purple-dark); }
+#cameraBtn:hover:not(:disabled), #startLyrics:hover:not(:disabled), #recordBtn:hover:not(:disabled) { background: var(--yellow-soft); }
+#stopBtn { background: var(--purple); color: var(--cream); }
+#stopBtn:hover:not(:disabled) { background: var(--purple-dark); }
+fieldset { border-radius: 8px; padding: 12px; }
+legend { color: var(--purple-dark); padding: 0 6px; }
+.lyric-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.lyric-actions button { flex: 1 1 110px; padding: 9px; }
+output { color: var(--purple); font-family: 'DM Mono', monospace; }
+input[type="range"] { min-height: 24px; }
+@media (prefers-reduced-motion: reduce) { button { transition: none; } }

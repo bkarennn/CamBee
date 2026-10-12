@@ -19,19 +19,23 @@ let lastPoint = null;
 
 const W = canvas.width;
 const H = canvas.height;
+const themeStyles = getComputedStyle(document.documentElement);
+const canvasTheme = Object.fromEntries(['purple-dark','purple','lilac','honey','cream','paper','lilac-soft'].map(name=>[name,themeStyles.getPropertyValue('--'+name).trim()]));
 
 // -------- FUNDOS --------
 
 function drawBackground() {
   const bg = $("background").value;
   const colors = {
-    cream: "#fff0d9",
+    cream: canvasTheme.cream,
+    honey: canvasTheme.honey,
+    lilac: canvasTheme["lilac-soft"],
     pink: "#f9c3d5",
     blue: "#b8d9ee",
     red: "#b7495b",
     checkered: "#f9d5e1",
-    draw: "#fff4e5",
-    image: "#fff4e5"
+    draw: canvasTheme.cream,
+    image: canvasTheme.cream
   };
 
   ctx.fillStyle = colors[bg];
@@ -172,12 +176,12 @@ function drawCamera() {
   const shape = $("shape").value;
 
   ctx.save();
-  ctx.shadowColor = "#74394b55";
+  ctx.shadowColor = canvasTheme.purple+"55";
   ctx.shadowBlur = 16;
   ctx.shadowOffsetY = 9;
 
   makeShape(shape, x, y, w, h);
-  ctx.fillStyle = "#fff8ef";
+  ctx.fillStyle = canvasTheme.paper;
   ctx.fill("evenodd");
   ctx.restore();
 
@@ -188,10 +192,10 @@ function drawCamera() {
   if (cameraStream && video.readyState >= 2) {
     drawWebcam(x, y, w, h);
   } else {
-    ctx.fillStyle = "#edc2d2";
+    ctx.fillStyle = canvasTheme["lilac-soft"];
     ctx.fillRect(x, y, w, h);
     ctx.textAlign = "center";
-    ctx.fillStyle = "#a45170";
+    ctx.fillStyle = canvasTheme.purple;
     ctx.font = "bold 23px sans-serif";
     ctx.fillText("🐝 turn on your camera ♡", x+w/2, y+h/2);
   }
@@ -200,7 +204,7 @@ function drawCamera() {
   ctx.restore();
 
   makeShape(shape, x, y, w, h);
-  ctx.strokeStyle = "#fff8ef";
+  ctx.strokeStyle = canvasTheme.paper;
   ctx.lineWidth = 10;
   ctx.stroke();
 }
@@ -246,7 +250,7 @@ function drawEffect(x, y, w, h) {
       // Deixa a região central menos ocupada por estrelas sólidas.
       if (u>.3 && u<.7) px=x+(u<.5 ? .2 : .8)*w;
       starPath(px,py,r,t*(i%2 ? .12 : -.08)+i,i);
-      ctx.fillStyle = i%3 ? $("starColor").value : "#ffb3df";
+      ctx.fillStyle = i%3 ? $("starColor").value : canvasTheme.lilac;
       ctx.fill();
     } else if (effect === "sakura") {
       ctx.translate(px,py); ctx.rotate(i+t*(i%2 ? .35 : -.22));
@@ -269,69 +273,65 @@ function drawEffect(x, y, w, h) {
 
 // -------- LETRA E ACORDES --------
 
-function drawWrappedText(text, x, y, maxWidth, lineHeight, font) {
-  ctx.font = font;
-
-  for (const paragraph of text.split("\n")) {
-    const words = paragraph.split(" ");
-    let line = "";
-
-    for (const word of words) {
-      const test = line ? line + " " + word : word;
-
-      if (ctx.measureText(test).width > maxWidth && line) {
-        ctx.fillText(line, x, y);
-        y += lineHeight;
-        line = word;
-      } else {
-        line = test;
+// Cache de quebra de linhas: velocidade e fade não refazem a medição a cada quadro.
+const textLayoutCache = new Map();
+function wrappedLines(text,maxWidth,font) {
+  const key=JSON.stringify([text,maxWidth,font]);
+  if(textLayoutCache.has(key)) return textLayoutCache.get(key);
+  ctx.font=font;
+  const lines=[];
+  for(const paragraph of text.split('\n')) {
+    let line='';
+    for(const word of paragraph.split(' ')) {
+      const test=line?line+' '+word:word;
+      if(ctx.measureText(test).width<=maxWidth) {line=test;continue;}
+      if(line) {lines.push(line);line='';}
+      // Também divide palavras longas para respeitar a coluna musical.
+      for(const character of word) {
+        if(line && ctx.measureText(line+character).width>maxWidth) {lines.push(line);line='';}
+        line+=character;
       }
     }
-
-    ctx.fillText(line, x, y);
-    y += lineHeight;
+    lines.push(line);
   }
+  if(textLayoutCache.size>12) textLayoutCache.clear();
+  textLayoutCache.set(key,lines);return lines;
+}
+function drawWrappedText(text,x,y,maxWidth,lineHeight,font) {
+  const lines=wrappedLines(text,maxWidth,font);ctx.font=font;
+  for(const line of lines) {ctx.fillText(line,x,y);y+=lineHeight;}
   return y;
 }
-
 function drawLyrics() {
-  const showLyrics = $("showLyrics").checked;
-  const showChords = $("showChords").checked;
-
-  if (!showLyrics && !showChords) return;
-
-  ctx.save();
-  ctx.fillStyle = $("textColor").value;
-  ctx.textAlign = $("textAlign").value;
-  const textX = ctx.textAlign === "center" ? 742.5 : ctx.textAlign === "right" ? 915 : 570;
-  // O título acompanha o campo e a mesma fonte já carregada da letra.
-  const title = $("songTitle").value.trim();
-  if (title) {
-    ctx.font = canvasTextFont("lyrics", Math.min(40, +$("textSize").value * 1.25));
-    ctx.fillText(title, textX, 113, 345);
+  const showLyrics=$('showLyrics').checked,showChords=$('showChords').checked;
+  const now=performance.now();
+  if(!showLyrics && !showChords) {lyricMotion.lastTime=now;return;}
+  ctx.save();ctx.fillStyle=$('textColor').value;ctx.textAlign=$('textAlign').value;
+  const textX=ctx.textAlign==='center'?742.5:ctx.textAlign==='right'?915:570;
+  const title=$('songTitle').value.trim();
+  if(title) {ctx.font=canvasTextFont('lyrics',Math.min(40,+$('textSize').value*1.25));ctx.fillText(title,textX,113,345);}
+  let top=140;
+  if(showChords) {
+    const font=canvasTextFont('chords'),height=+$('textSize').value*1.4;
+    const lines=wrappedLines($('chords').value,345,font);
+    // Reserva uma área própria para os acordes, sem deixar que ocultem a letra inteira.
+    const areaHeight=showLyrics?Math.min(110,lines.length*height+10):320;
+    ctx.save();ctx.beginPath();ctx.rect(560,top,370,areaHeight);ctx.clip();
+    drawWrappedText($('chords').value,textX,top+height,345,height,font);ctx.restore();
+    top+=areaHeight+15;
   }
-  let y = 170;
-
-  // Recorta o texto para não ultrapassar a área.
-  ctx.beginPath();
-  ctx.rect(560, 140, 370, 320);
-  ctx.clip();
-
-  if (showChords) {
-    y = drawWrappedText(
-      $("chords").value,
-      textX, y, 345, +$("textSize").value*1.4, canvasTextFont("chords")
-    );
-    y += 15;
-  }
-
-  if (showLyrics) {
-    drawWrappedText(
-      $("lyrics").value,
-      textX, y, 345, +$("textSize").value*1.5, canvasTextFont("lyrics")
-    );
-  }
-
+  if(showLyrics) {
+    const font=canvasTextFont('lyrics'),lineHeight=+$('textSize').value*1.5;
+    const lines=wrappedLines($('lyrics').value,345,font);
+    const height=460-top,automatic=$('lyricsScrollMode').value==='auto';
+    const distance=height+lines.length*lineHeight;
+    const offset=atualizarRolagemLetra(now,distance,true);
+    ctx.save();ctx.beginPath();ctx.rect(560,top,370,height);ctx.clip();
+    ctx.globalAlpha=opacidadeLetra(now);ctx.font=font;
+    const firstY=automatic?460-offset:top+lineHeight;
+    lines.forEach((line,i)=>{const y=firstY+i*lineHeight;if(y>=top-lineHeight && y<=460+lineHeight)ctx.fillText(line,textX,y);});
+    ctx.restore();
+  } else lyricMotion.lastTime=now;
   ctx.restore();
 }
 
@@ -346,7 +346,7 @@ function render() {
   drawDecorations("foreground");
   drawLyrics();
 
-  ctx.fillStyle = "#81445a";
+  ctx.fillStyle = canvasTheme["purple-dark"];
   ctx.textAlign = "center";
   ctx.font = "bold 16px sans-serif";
   ctx.fillText("made with love ♡ cam bee", W/2, H-19);
@@ -571,8 +571,8 @@ const decorationTypes = {
         // A máscara gira; a imagem permanece no sistema de coordenadas da câmera.
         drawWebcam(box.x,box.y,box.w,box.h,true,true);
       } else {
-        ctx.fillStyle='#e9c9de'; ctx.fillRect(0,0,W,H);
-        ctx.fillStyle='#78334d'; ctx.textAlign='center'; ctx.font='16px sans-serif';
+        ctx.fillStyle=canvasTheme['lilac-soft']; ctx.fillRect(0,0,W,H);
+        ctx.fillStyle=canvasTheme['purple-dark']; ctx.textAlign='center'; ctx.font='16px sans-serif';
         ctx.fillText('Ligue a câmera',d.x,d.y);
       }
       ctx.restore();
@@ -688,4 +688,5 @@ canvas.addEventListener('pointermove',event=>{
 $('centerCamera').onclick=()=>{$('cameraX').value=50;$('cameraY').value=50;};
 ['showLyrics','showChords'].forEach(id=>$(id).addEventListener('change',()=>{$('cameraX').value=50;$('cameraY').value=50;}));
 initializeStudio();
+initializeLyricsMotion();
 render();

@@ -228,10 +228,27 @@ function starPath(px, py, radius, angle = 0, seed = 0) {
 
 // Tamanhos independentes: o poá não altera pétalas nem estrelinhas.
 const effectSettings = {
-  stars: {sizeInput: 'starsSize', density: 1},
-  dots: {sizeInput: 'dotsSize', density: 1.25},
-  sakura: {sizeInput: 'sakuraSize', density: 1}
+  stars: {min:10,max:90,defaultSize:35,size:35,density:1},
+  dots: {min:10,max:90,defaultSize:35,size:35,density:1.25},
+  sakura: {min:50,max:200,defaultSize:100,size:100,density:1},
+  kiss: {min:15,max:80,defaultSize:38,size:38},
+  ocean: {min:5,max:35,defaultSize:15,size:15}
 };
+// Um controle visível; cada efeito mantém sua escala e seu último ajuste.
+function syncEffectSize() {
+  const settings=effectSettings[$('effect').value],slider=$('effectSize');
+  slider.disabled=!settings;
+  if(settings) {slider.min=settings.min;slider.max=settings.max;slider.value=settings.size;}
+}
+function resetEffectSizes() {
+  Object.values(effectSettings).forEach(settings=>settings.size=settings.defaultSize);
+  syncEffectSize();
+}
+$('effect').addEventListener('change',syncEffectSize);
+$('effectSize').addEventListener('input',()=>{
+  const settings=effectSettings[$('effect').value];
+  if(settings) settings.size=+$('effectSize').value;
+});
 
 function drawEffect(x, y, w, h) {
   const effect = $("effect").value;
@@ -241,7 +258,7 @@ function drawEffect(x, y, w, h) {
   if (!settings) return;
   const t = (performance.now()-startedAt)/1000;
   const count = Math.ceil(+$("effectCount").value * settings.density);
-  const configuredSize = +$(settings.sizeInput).value;
+  const configuredSize = settings.size;
   const size = effect === "sakura" ? 15.5 * configuredSize / 100 : configuredSize;
   const amount = +$("effectAmount").value/100;
   for (let i=0; i<count; i++) {
@@ -311,21 +328,68 @@ function drawTornPaper(x,y,w,h) {
   }
   ctx.restore();
 }
+// Recortes isolados da referência original (736 × 799), preservada em assets.
+const kissSprites=[];
+let kissAssetState='idle';
+function loadKissSprites() {
+  if(kissAssetState!=='idle') return;
+  kissAssetState='loading';
+  const image=new Image();
+  image.onload=()=>{
+    try {
+      const crops=[[88,493,344,244],[382,350,321,243]];
+      const palette=[[177,43,68],[207,82,117],[139,33,57]];
+      const prepared=[];
+      for(const [x,y,w,h] of crops) {
+        const tile=document.createElement('canvas');tile.width=w;tile.height=h;
+        const c=tile.getContext('2d',{willReadFrequently:true});
+        c.drawImage(image,x,y,w,h,0,0,w,h);
+        const original=c.getImageData(0,0,w,h);
+        for(const color of palette) {
+          const sprite=document.createElement('canvas');sprite.width=w;sprite.height=h;
+          const target=sprite.getContext('2d'),pixels=target.createImageData(w,h);
+          for(let p=0;p<original.data.length;p+=4) {
+            const r=original.data[p],g=original.data[p+1],b=original.data[p+2];
+            // A pigmentação vermelha vira alfa: branco e ruído cinza desaparecem,
+            // mas poros, estrias e áreas de pressão mais forte são preservados.
+            const pigment=Math.max(0,r-(g+b)/2-9);
+            const alpha=Math.min(255,Math.pow(pigment/155,.85)*255);
+            pixels.data[p]=color[0];pixels.data[p+1]=color[1];pixels.data[p+2]=color[2];pixels.data[p+3]=alpha;
+          }
+          target.putImageData(pixels,0,0);prepared.push(sprite);
+        }
+      }
+      kissSprites.push(...prepared);kissAssetState='ready';
+      $('kissStatus').textContent='Carimbos de batom prontos.';
+    } catch(error) {
+      kissAssetState='error';console.warn('[Cam Bee] Recortes de batom',error);
+      $('kissStatus').textContent='Não foi possível preparar os beijinhos. Abra o site por localhost ou HTTPS para carregar a textura.';
+    }
+  };
+  image.onerror=()=>{kissAssetState='error';$('kissStatus').textContent='Não foi possível carregar a referência dos beijinhos em assets.';};
+  image.src='assets/download (3).jpeg';
+}
 function drawKisses(x,y,w,h) {
-  const t=(performance.now()-startedAt)/1000,amount=+$('effectAmount').value/100;
-  const count=Math.ceil(+$('effectCount').value*.65),size=+$('kissSize').value;
+  if(kissAssetState==='idle') loadKissSprites();
+  if(kissAssetState!=='ready') return;
+  const amount=+$('effectAmount').value/100;
+  const count=Math.ceil(+$('effectCount').value*.65),size=effectSettings.kiss.size;
   for(let i=0;i<count;i++) {
-    let u=(i*.618+.12)%1;
-    if(u>.3 && u<.7) u=u<.5?.2:.8;
-    const px=x+u*w+Math.sin(t*.25+i)*w*.012,py=y+(.12+(i*.381% .76))*h;
-    ctx.save();ctx.translate(px,py);ctx.rotate(Math.sin(i*13)*.6+Math.sin(t*.2+i)*.035);
-    const scale=size*(.7+(i%4)*.17);ctx.scale(scale,scale);
-    ctx.globalAlpha=amount*(.38+(i%4)*.17);ctx.fillStyle=['#b52c4e','#df628b','#782340'][i%3];
-    // Duas marcas de lábios, com arco do Cupido e separação central.
-    ctx.beginPath();ctx.moveTo(-.55,0);ctx.bezierCurveTo(-.35,-.17,-.2,-.45,0,-.23);ctx.bezierCurveTo(.2,-.45,.35,-.17,.55,0);ctx.bezierCurveTo(.2,-.03,-.2,-.03,-.55,0);ctx.fill();
-    ctx.beginPath();ctx.moveTo(-.52,.045);ctx.bezierCurveTo(-.22,.42,.22,.42,.52,.045);ctx.bezierCurveTo(.16,.11,-.16,.11,-.52,.045);ctx.fill();
-    ctx.strokeStyle=canvasTheme.paper;ctx.globalAlpha*=.35;ctx.lineWidth=.018;
-    for(let j=0;j<7;j++){const xx=-.3+j*.1;ctx.beginPath();ctx.moveTo(xx,.12);ctx.lineTo(xx*.9,.21+Math.cos(j)*.035);ctx.stroke();}
+    // Carimbos estáticos: variações determinísticas, concentradas na periferia.
+    const seed=(i*.61803398875+.13)%1;
+    let u,v;
+    switch(i%5) {
+      case 0:u=.1+seed*.12;v=.15+((i*.381)% .7);break;
+      case 1:u=.79+seed*.1;v=.12+((i*.271)% .73);break;
+      case 2:u=.22+seed*.57;v=.12;break;
+      case 3:u=.18+seed*.63;v=.86;break;
+      default:u=seed<.5?.32:.68;v=.23+seed*.5;
+    }
+    const sprite=kissSprites[i%kissSprites.length];
+    const width=Math.min(size*(1.15+(i%4)*.22),w*.25),height=width*sprite.height/sprite.width;
+    ctx.save();ctx.translate(x+u*w,y+v*h);ctx.rotate(Math.sin(i*13+.3)*.55);
+    ctx.globalAlpha=amount*(.5+(i%4)*.15);
+    ctx.drawImage(sprite,-width/2,-height/2,width,height);
     ctx.restore();
   }
 }
@@ -352,7 +416,7 @@ function drawOceanOverlay(x,y,w,h) {
   ctx.save();ctx.globalAlpha=amount*.22;ctx.fillStyle='#208fa4';ctx.fillRect(x,y,w,h);
   ctx.strokeStyle='#c4f8ef';ctx.lineWidth=2;ctx.globalAlpha=amount*.1;
   for(let j=0;j<5;j++) {ctx.beginPath();for(let i=0;i<=24;i++){const px=x+w*i/24,py=y+h*(j+.5)/5+Math.sin(i*.5+t+j)*h*.035;if(!i)ctx.moveTo(px,py);else ctx.lineTo(px,py);}ctx.stroke();}
-  const size=+$('bubbleSize').value;
+  const size=effectSettings.ocean.size;
   for(let i=0;i<+$('effectCount').value;i++) {
     const radius=size*(.35+(i%5)*.16),range=h+radius*2;
     const progress=(i*71+t*(12+i%5*5))%range;
@@ -781,6 +845,7 @@ canvas.addEventListener('pointermove',event=>{
 ['pointerup','pointercancel','lostpointercapture'].forEach(type=>canvas.addEventListener(type,()=>dragDecoration=null));
 $('centerCamera').onclick=()=>{$('cameraX').value=50;$('cameraY').value=50;};
 ['showLyrics','showChords'].forEach(id=>$(id).addEventListener('change',()=>{$('cameraX').value=50;$('cameraY').value=50;}));
+syncEffectSize();
 initializeStudio();
 initializeLyricsMotion();
 render();

@@ -191,6 +191,7 @@ function reiniciarStudio() {
     element.value=value;
     if(element.type==='checkbox') element.checked=checked;
   }
+  resetEffectSizes();
   // Reiniciar significa uma composição limpa, sem o texto de demonstração.
   ['songTitle','lyrics','chords','backgroundFile'].forEach(id=>$(id).value='');
   $('showLyrics').checked=false;$('showChords').checked=false;

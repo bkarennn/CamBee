@@ -114,7 +114,7 @@ body {
   align-items: center;
 }
 
-select, textarea, input[type="color"] {
+select, textarea, input[type="color"], input[type="text"] {
   width: 100%;
   border: 2px solid #bc8197;
   background: #fffaf5;

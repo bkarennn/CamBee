@@ -11,7 +11,7 @@ const fontState = {lyrics: {family:'sans-serif'}, chords: {family:'monospace'}};
 let fontRevision=0, fontsPending=false, cameraBusy=false, recordingPreparing=false;
 let importedBackground=null, backgroundRequest=0;
 const pendingImageURLs = new Set();
-const typographyControls=['lyricsFont','chordsFont','textBold','chordsBold','lyrics','chords'];
+const typographyControls=['lyricsFont','chordsFont','textBold','chordsBold','lyrics','chords','songTitle'];
 
 function hasLiveTrack(kind) {
   return !!cameraStream?.getTracks().some(t=>t.kind===kind && t.readyState==='live' && t.enabled && !t.muted);
@@ -43,7 +43,8 @@ async function loadSelectedFonts() {
     if(SYSTEM_FONTS.has(family)) return {family,weight};
     try {
       if(!document.fonts) throw new Error('API de fontes indisponível');
-      const loaded=await withTimeout(document.fonts.load(weight+' 22px "'+family+'"',$(kind).value || 'Música ação ♫'),12000,'Tempo de carregamento excedido');
+      const sample = $(kind).value + (kind==='lyrics' ? ' '+$('songTitle').value : '');
+      const loaded=await withTimeout(document.fonts.load(weight+' 22px "'+family+'"',sample.trim() || 'Música ação ♫'),12000,'Tempo de carregamento excedido');
       if(!loaded.length || loaded.some(face=>face.status!=='loaded')) throw new Error('Fonte indisponível');
       return {family,weight};
     } catch(error) {
@@ -57,10 +58,10 @@ async function loadSelectedFonts() {
   $('fontStatus').textContent=failed.length ? 'Não foi possível carregar '+failed.join(', ')+'. Usando fonte alternativa na prévia e no vídeo.' : 'Fontes prontas para a prévia e a gravação.';
   refreshStudioControls();
 }
-function canvasTextFont(kind) {
+function canvasTextFont(kind, size = $('textSize').value) {
   const state=fontState[kind];
   const family=['sans-serif','monospace'].includes(state.family)?state.family:'"'+state.family+'", '+(kind==='chords'?'monospace':'sans-serif');
-  return (state.weight||'400')+' '+$('textSize').value+'px '+family;
+  return (state.weight||'400')+' '+size+'px '+family;
 }
 
 function backgroundImageBox(image,mode,zoom,px,py) {

@@ -218,18 +218,28 @@ function starPath(px, py, radius, angle = 0, seed = 0) {
   ctx.closePath();
 }
 
+// Tamanhos independentes: o poá não altera pétalas nem estrelinhas.
+const effectSettings = {
+  stars: {sizeInput: 'starsSize', density: 1},
+  dots: {sizeInput: 'dotsSize', density: 1.25},
+  sakura: {sizeInput: 'sakuraSize', density: 1}
+};
+
 function drawEffect(x, y, w, h) {
   const effect = $("effect").value;
-  if (effect === "none") return;
+  const settings = effectSettings[effect];
+  if (!settings) return;
   const t = (performance.now()-startedAt)/1000;
-  const count = Math.ceil(+$("effectCount").value * (effect === "dots" ? 1.25 : 1));
-  const size = +$("effectSize").value;
+  const count = Math.ceil(+$("effectCount").value * settings.density);
+  const configuredSize = +$(settings.sizeInput).value;
+  const size = effect === "sakura" ? 15.5 * configuredSize / 100 : configuredSize;
   const amount = +$("effectAmount").value/100;
   for (let i=0; i<count; i++) {
     const u = ((i*.61803398875+.13)%1);
     let px = x + u*w + Math.sin(t*.45+i)*w*.025;
     const py = y + ((i*67+t*(10+i%5*3))%(h+size*2))-size;
-    const r = size*(.35+(i%5)*.12);
+    // Sakura em 100% recupera a faixa original de 16–31 px de altura.
+    const r = effect === "sakura" ? (8 + (i%4)*2.5) * configuredSize / 100 : size*(.35+(i%5)*.12);
     ctx.save();
     ctx.globalAlpha = amount;
     if (effect === "stars") {
@@ -237,7 +247,7 @@ function drawEffect(x, y, w, h) {
       if (u>.3 && u<.7) px=x+(u<.5 ? .2 : .8)*w;
       starPath(px,py,r,t*(i%2 ? .12 : -.08)+i,i);
       ctx.fillStyle = i%3 ? $("starColor").value : "#ffb3df";
-      ctx.fill(); ctx.strokeStyle="#fff8ef"; ctx.lineWidth=1.5; ctx.stroke();
+      ctx.fill();
     } else if (effect === "sakura") {
       ctx.translate(px,py); ctx.rotate(i+t*(i%2 ? .35 : -.22));
       ctx.beginPath(); ctx.moveTo(0,-r);
@@ -292,13 +302,14 @@ function drawLyrics() {
 
   ctx.save();
   ctx.fillStyle = $("textColor").value;
-  ctx.textAlign = "left";
-
-  ctx.font = "bold 30px sans-serif";
-  ctx.fillText("♫ my little song", 570, 113);
-
   ctx.textAlign = $("textAlign").value;
   const textX = ctx.textAlign === "center" ? 742.5 : ctx.textAlign === "right" ? 915 : 570;
+  // O título acompanha o campo e a mesma fonte já carregada da letra.
+  const title = $("songTitle").value.trim();
+  if (title) {
+    ctx.font = canvasTextFont("lyrics", Math.min(40, +$("textSize").value * 1.25));
+    ctx.fillText(title, textX, 113, 345);
+  }
   let y = 170;
 
   // Recorta o texto para não ultrapassar a área.
@@ -564,9 +575,6 @@ const decorationTypes = {
         ctx.fillStyle='#78334d'; ctx.textAlign='center'; ctx.font='16px sans-serif';
         ctx.fillText('Ligue a câmera',d.x,d.y);
       }
-      ctx.restore();
-      ctx.save(); mirrorStarPath(d);
-      ctx.lineJoin='round'; ctx.strokeStyle='#fff8ef'; ctx.lineWidth=5; ctx.stroke();
       ctx.restore();
     },
     hit(d,p) { mirrorStarPath(d); return ctx.isPointInPath(p.x,p.y); }

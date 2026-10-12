@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&amp;family=DM+Mono&amp;family=Fredoka:wght@400;700&amp;family=Nunito:wght@400;600;700;800;900&amp;family=Patrick+Hand&amp;family=Pixelify+Sans:wght@400;700&amp;family=Press+Start+2P&amp;family=Quicksand:wght@400;700&amp;family=Silkscreen:wght@400;700&amp;display=swap">
-  <link rel="stylesheet" href="style.css?v=0.3">
+  <link rel="stylesheet" href="style.css?v=0.3.1">
 </head>
 <body>
   <header class="topbar">
@@ -88,7 +88,9 @@
           <button id="centerCamera">Centralizar</button>
           <fieldset><legend>Efeitos</legend>
           <label>Quantidade<input id="effectCount" type="range" min="1" max="40" value="16"></label>
-          <label>Tamanho<input id="effectSize" type="range" min="10" max="90" value="35"></label>
+          <label>Tamanho das estrelinhas<input id="starsSize" type="range" min="10" max="90" value="35"></label>
+          <label>Tamanho das bolinhas<input id="dotsSize" type="range" min="10" max="90" value="35"></label>
+          <label>Tamanho das pétalas (%)<input id="sakuraSize" type="range" min="50" max="200" value="100"></label>
           <label>Intensidade<input id="effectAmount" type="range" min="0" max="100" value="85"></label>
           <label>Cor das estrelas<input id="starColor" type="color" value="#ffe6a0"></label>
           </fieldset>
@@ -136,6 +138,7 @@
 </div></section>
 <section class="window"><div class="window-title">♫ Lyrics & Chords</div>
         <div class="window-body fields">
+          <label>Título da música<input id="songTitle" type="text" value="my little song" placeholder="Digite o título da música"></label>
           <label><input id="showLyrics" type="checkbox" checked> Mostrar letra</label>
           <textarea id="lyrics" rows="5" placeholder="Cole a letra aqui...">my little song
 sing with me ♡</textarea>
@@ -159,7 +162,7 @@ sing with me ♡</textarea>
   </main>
 
   <footer>made with ♡ and a little bee 🐝</footer>
-  <script src="studio-features.js?v=0.3"></script>
-  <script src="script.js?v=0.3"></script>
+  <script src="studio-features.js?v=0.3.1"></script>
+  <script src="script.js?v=0.3.1"></script>
 </body>
 </html>

@@ -24,6 +24,7 @@ function refreshStudioControls() {
   const busy=recordingPreparing || (recorder && recorder.state!=='inactive');
   $('recordBtn').disabled=busy || !canRecord();
   $('cameraBtn').disabled=busy || cameraBusy;
+  $('resetStudio').disabled=busy || cameraBusy;
   ['cameraDevice','microphoneDevice','refreshDevices'].forEach(id=>$(id).disabled=busy || cameraBusy);
   typographyControls.forEach(id=>$(id).disabled=!!busy);
 }
@@ -182,6 +183,28 @@ async function connectDevices() {
     await refreshDevices();
   } finally { cameraBusy=false;refreshStudioControls(); }
 }
+// Captura os padrões da interface após preencher os seletores de fontes.
+let studioDefaults=[];
+function reiniciarStudio() {
+  if(cameraBusy || recordingPreparing || (recorder && recorder.state!=='inactive')) return;
+  for(const {element,value,checked} of studioDefaults) {
+    element.value=value;
+    if(element.type==='checkbox') element.checked=checked;
+  }
+  // Reiniciar significa uma composição limpa, sem o texto de demonstração.
+  ['songTitle','lyrics','chords','backgroundFile'].forEach(id=>$(id).value='');
+  $('showLyrics').checked=false;$('showChords').checked=false;
+  $('removeBackground').onclick(); // Invalida importações pendentes e libera suas URLs.
+  drawingActive=false;lastPoint=null;
+  pen.clearRect(0,0,drawing.width,drawing.height);
+  decorations.length=0;selectedDecoration=null;dragDecoration=null;decorationId=0;
+  updateDecorationControls();$('decorationType').onchange();
+  Object.assign(lyricMotion,{offset:0,running:false,ended:false,lastTime:null});
+  atualizarVelocidadeRolagem();reiniciarFadeLetra();atualizarControlesRolagem();
+  textLayoutCache.clear();startedAt=performance.now();
+  loadSelectedFonts();
+  $('status').textContent='Tudo limpo! Ajustes restaurados. Pronto para um novo cover ♡';
+}
 function initializeStudio() {
   for(const kind of ['lyrics','chords']) {
     const select=$(kind+'Font');
@@ -209,6 +232,10 @@ function initializeStudio() {
   window.addEventListener('error',event=>console.error('[Cam Bee 0.3] JavaScript',event.message,event.filename,event.lineno));
   window.addEventListener('unhandledrejection',event=>console.error('[Cam Bee 0.3] Promise',event.reason));
   console.info('[Cam Bee 0.3] Arquivos carregados', {script:document.querySelector('script[src*="script.js"]')?.src,stylesheet:document.querySelector('link[href*="style.css"]')?.href});
+  studioDefaults=[...document.querySelectorAll('.settings input, .settings select, .settings textarea')]
+    .filter(element=>!['cameraDevice','microphoneDevice'].includes(element.id))
+    .map(element=>({element,value:element.value,checked:element.checked}));
+  $('resetStudio').onclick=reiniciarStudio;
   loadSelectedFonts();
   refreshStudioControls();
 }

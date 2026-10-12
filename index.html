@@ -33,6 +33,7 @@
           <button id="cameraBtn">📷 Ligar câmera</button>
           <button id="recordBtn" disabled>🔴 Gravar</button>
           <button id="stopBtn" disabled>■ Parar</button>
+          <button id="resetStudio" type="button" title="Limpar textos, desenhos, decorações e restaurar os ajustes">↺ Reiniciar tudo</button>
         </div>
         <p id="status" role="status" aria-live="polite">Câmera desligada ♡</p>
       </div>
@@ -67,7 +68,7 @@
               <option value="none">Nenhum</option>
               <option value="stars">Estrelinhas</option>
               <option value="sakura">Sakura Rain</option>
-              <option value="dots">Poá colorido</option>
+              <option value="kiss">Kiss Marks / Beijinhos</option><option value="ocean">Ocean / Underwater</option><option value="dots">Poá colorido</option>
             </select>
           </label>
 
@@ -77,7 +78,7 @@
               <option value="square">Quadrada</option>
               <option value="circle">Redonda</option>
               <option value="heart">Coração</option>
-              <option value="star">Estrela</option><option value="cat">Gato</option><option value="rabbit">Coelho</option><option value="pizza">Pizza</option><option value="paper">Papel furado</option><option value="flower">Flor</option>
+              <option value="torn">Torn Paper / Papel Rasgado</option><option value="star">Estrela</option><option value="cat">Gato</option><option value="rabbit">Coelho</option><option value="pizza">Pizza</option><option value="paper">Papel furado</option><option value="flower">Flor</option>
             </select>
           </label>
 
@@ -91,6 +92,8 @@
           <label>Tamanho das estrelinhas<input id="starsSize" type="range" min="10" max="90" value="35"></label>
           <label>Tamanho das bolinhas<input id="dotsSize" type="range" min="10" max="90" value="35"></label>
           <label>Tamanho das pétalas (%)<input id="sakuraSize" type="range" min="50" max="200" value="100"></label>
+          <label>Tamanho dos beijinhos<input id="kissSize" type="range" min="15" max="80" value="38"></label>
+          <label>Tamanho das bolhas<input id="bubbleSize" type="range" min="5" max="35" value="15"></label>
           <label>Intensidade<input id="effectAmount" type="range" min="0" max="100" value="85"></label>
           <label>Cor das estrelas<input id="starColor" type="color" value="#f6c63d"></label>
           </fieldset>
@@ -175,7 +178,7 @@ sing with me ♡</textarea>
 
   <footer>made with ♡ and a little bee 🐝</footer>
   <script src="lyrics-motion.js?v=0.4"></script>
-  <script src="studio-features.js?v=0.4"></script>
-  <script src="script.js?v=0.4"></script>
+  <script src="studio-features.js?v=0.4.1"></script>
+  <script src="script.js?v=0.5"></script>
 </body>
 </html>

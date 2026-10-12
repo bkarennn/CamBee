@@ -73,7 +73,9 @@ function makeShape(shape, x, y, w, h) {
 
   ctx.beginPath();
 
-  if (shape === "circle") {
+  if (shape === "torn") {
+    tornPath(x,y,w,h);
+  } else if (shape === "circle") {
     ctx.ellipse(cx, cy, w / 2, h / 2, 0, 0, Math.PI * 2);
   } else if (shape === "heart") {
     ctx.moveTo(cx, y + h * .93);
@@ -190,7 +192,8 @@ function drawCamera() {
   ctx.clip("evenodd");
 
   if (cameraStream && video.readyState >= 2) {
-    drawWebcam(x, y, w, h);
+    if ($("effect").value === "ocean") drawOceanCamera(x,y,w,h);
+    else drawWebcam(x, y, w, h);
   } else {
     ctx.fillStyle = canvasTheme["lilac-soft"];
     ctx.fillRect(x, y, w, h);
@@ -203,6 +206,7 @@ function drawCamera() {
   drawEffect(x, y, w, h);
   ctx.restore();
 
+  if (shape === "torn") { drawTornPaper(x,y,w,h); return; }
   makeShape(shape, x, y, w, h);
   ctx.strokeStyle = canvasTheme.paper;
   ctx.lineWidth = 10;
@@ -231,6 +235,8 @@ const effectSettings = {
 
 function drawEffect(x, y, w, h) {
   const effect = $("effect").value;
+  if(effect === "kiss") { drawKisses(x,y,w,h); return; }
+  if(effect === "ocean") { drawOceanOverlay(x,y,w,h); return; }
   const settings = effectSettings[effect];
   if (!settings) return;
   const t = (performance.now()-startedAt)/1000;
@@ -269,6 +275,94 @@ function drawEffect(x, y, w, h) {
     }
     ctx.restore();
   }
+}
+
+
+// -------- OVERLAYS E PAPEL RASGADO --------
+// Pontos fixos: o rasgo não muda nem pisca entre quadros.
+function tornPoints(x,y,w,h) {
+  const points=[];
+  for(let side=0;side<4;side++) for(let i=0;i<24;i++) {
+    const u=i/24, inset=.075+.018*Math.sin(i*7+side*13)+.009*Math.sin(i*17+side);
+    const p=side===0?[.075+u*.85,inset]:side===1?[1-inset,.075+u*.85]:side===2?[.925-u*.85,1-inset]:[inset,.925-u*.85];
+    points.push([x+p[0]*w,y+p[1]*h]);
+  }
+  return points;
+}
+function tornPath(x,y,w,h,begin=true) {
+  if(begin) ctx.beginPath();
+  tornPoints(x,y,w,h).forEach(([px,py],i)=>i?ctx.lineTo(px,py):ctx.moveTo(px,py));ctx.closePath();
+}
+function drawTornPaper(x,y,w,h) {
+  ctx.save();
+  // Folha opaca com um buraco real: preenchimento par-ímpar ao redor da webcam.
+  ctx.beginPath();ctx.roundRect(x,y,w,h,3);tornPath(x,y,w,h,false);
+  ctx.fillStyle=canvasTheme.paper;ctx.shadowColor='#2e173f40';ctx.shadowBlur=w*.025;ctx.shadowOffsetY=h*.014;
+  ctx.fill('evenodd');ctx.shadowBlur=0;ctx.shadowOffsetY=0;
+  const points=tornPoints(x,y,w,h);
+  // Abas triangulares e fibras nas bordas sugerem papel dobrado/levantado.
+  for(let i=2;i<points.length;i+=5) {
+    const a=points[i],b=points[(i+2)%points.length];
+    const mx=(a[0]+b[0])/2,my=(a[1]+b[1])/2;
+    const dx=(mx-(x+w/2))*.055,dy=(my-(y+h/2))*.055;
+    ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.lineTo(mx+dx,my+dy);ctx.closePath();
+    ctx.fillStyle=i%2?'#dfd3bb':'#f4ead7';ctx.fill();
+    ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(mx+dx,my+dy);ctx.strokeStyle='#fffdf5';ctx.lineWidth=Math.max(.6,w*.002);ctx.stroke();
+  }
+  ctx.restore();
+}
+function drawKisses(x,y,w,h) {
+  const t=(performance.now()-startedAt)/1000,amount=+$('effectAmount').value/100;
+  const count=Math.ceil(+$('effectCount').value*.65),size=+$('kissSize').value;
+  for(let i=0;i<count;i++) {
+    let u=(i*.618+.12)%1;
+    if(u>.3 && u<.7) u=u<.5?.2:.8;
+    const px=x+u*w+Math.sin(t*.25+i)*w*.012,py=y+(.12+(i*.381% .76))*h;
+    ctx.save();ctx.translate(px,py);ctx.rotate(Math.sin(i*13)*.6+Math.sin(t*.2+i)*.035);
+    const scale=size*(.7+(i%4)*.17);ctx.scale(scale,scale);
+    ctx.globalAlpha=amount*(.38+(i%4)*.17);ctx.fillStyle=['#b52c4e','#df628b','#782340'][i%3];
+    // Duas marcas de lábios, com arco do Cupido e separação central.
+    ctx.beginPath();ctx.moveTo(-.55,0);ctx.bezierCurveTo(-.35,-.17,-.2,-.45,0,-.23);ctx.bezierCurveTo(.2,-.45,.35,-.17,.55,0);ctx.bezierCurveTo(.2,-.03,-.2,-.03,-.55,0);ctx.fill();
+    ctx.beginPath();ctx.moveTo(-.52,.045);ctx.bezierCurveTo(-.22,.42,.22,.42,.52,.045);ctx.bezierCurveTo(.16,.11,-.16,.11,-.52,.045);ctx.fill();
+    ctx.strokeStyle=canvasTheme.paper;ctx.globalAlpha*=.35;ctx.lineWidth=.018;
+    for(let j=0;j<7;j++){const xx=-.3+j*.1;ctx.beginPath();ctx.moveTo(xx,.12);ctx.lineTo(xx*.9,.21+Math.cos(j)*.035);ctx.stroke();}
+    ctx.restore();
+  }
+}
+let oceanBuffer=null;
+function drawOceanCamera(x,y,w,h) {
+  const amount=+$('effectAmount').value/100,t=(performance.now()-startedAt)/1000;
+  if(!amount) {drawWebcam(x,y,w,h);return;}
+  if(!oceanBuffer) {oceanBuffer=document.createElement('canvas');oceanBuffer.width=W;oceanBuffer.height=H;}
+  const water=oceanBuffer.getContext('2d'),margin=w*.009*amount;
+  const selected=$('filter').value;
+  water.clearRect(0,0,W,H);
+  water.filter=selected==='negative'?'invert('+$('negativeAmount').value+'%)':filters[selected];
+  const scale=Math.max((w+margin*2)/video.videoWidth,h/video.videoHeight);
+  const vw=video.videoWidth*scale,vh=video.videoHeight*scale;
+  water.drawImage(video,(w+margin*2-vw)/2,(h-vh)/2,vw,vh);water.filter='none';
+  // Uma captura filtrada por quadro; apenas pequenas faixas são deslocadas.
+  for(let yy=0;yy<h;yy+=6) {
+    const shift=Math.sin(yy/h*10-t*1.3)*margin,height=Math.min(6,h-yy);
+    ctx.drawImage(oceanBuffer,margin-shift,yy,w,height,x,y+yy,w,height);
+  }
+}
+function drawOceanOverlay(x,y,w,h) {
+  const t=(performance.now()-startedAt)/1000,amount=+$('effectAmount').value/100;
+  ctx.save();ctx.globalAlpha=amount*.22;ctx.fillStyle='#208fa4';ctx.fillRect(x,y,w,h);
+  ctx.strokeStyle='#c4f8ef';ctx.lineWidth=2;ctx.globalAlpha=amount*.1;
+  for(let j=0;j<5;j++) {ctx.beginPath();for(let i=0;i<=24;i++){const px=x+w*i/24,py=y+h*(j+.5)/5+Math.sin(i*.5+t+j)*h*.035;if(!i)ctx.moveTo(px,py);else ctx.lineTo(px,py);}ctx.stroke();}
+  const size=+$('bubbleSize').value;
+  for(let i=0;i<+$('effectCount').value;i++) {
+    const radius=size*(.35+(i%5)*.16),range=h+radius*2;
+    const progress=(i*71+t*(12+i%5*5))%range;
+    const u=i%4===0?.5+Math.sin(i)*.08:(i*.618+.1)%1;
+    const px=x+u*w+Math.sin(t*.6+i)*w*.025,py=y+h+radius-progress;
+    ctx.globalAlpha=amount*(.18+(i%3)*.09);ctx.lineWidth=Math.max(1,radius*.09);
+    ctx.beginPath();ctx.arc(px,py,radius,0,Math.PI*2);ctx.stroke();
+    ctx.beginPath();ctx.arc(px-radius*.2,py-radius*.2,radius*.56,Math.PI,Math.PI*1.5);ctx.stroke();
+  }
+  ctx.restore();
 }
 
 // -------- LETRA E ACORDES --------

@@ -1,0 +1,220 @@
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono&family=Nunito:wght@400;600;700;800;900&display=swap');
+
+:root {
+  --pink: #f6b8ca;
+  --darkpink: #a73c61;
+  --cream: #fff4e5;
+  --red: #a63546;
+  --ink: #573748;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: #f9dce4;
+  background-image: radial-gradient(#e9a9bc 1.2px, transparent 1.2px);
+  background-size: 20px 20px;
+  color: var(--ink);
+  font-family: 'Nunito', sans-serif;
+}
+
+.topbar {
+  background: #a33e5b;
+  color: white;
+  padding: 15px 25px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  font-weight: 900;
+  font-size: 22px;
+  border-bottom: 5px solid #7c2d49;
+}
+
+.topbar small {
+  font-size: 11px;
+  font-weight: 400;
+  margin-left: 8px;
+}
+
+.topbar > span:last-child {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.desktop {
+  max-width: 1450px;
+  margin: 35px auto;
+  padding: 0 22px;
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+  align-items: start;
+  gap: 20px;
+}
+
+.window {
+  background: var(--cream);
+  border: 3px solid #8b4962;
+  box-shadow: 6px 6px 0 #b77690;
+  overflow: hidden;
+}
+
+.window-title {
+  background: linear-gradient(90deg, #c96e90, #f2afc8);
+  border-bottom: 3px solid #8b4962;
+  padding: 10px 15px;
+  display: flex;
+  justify-content: space-between;
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  font-weight: bold;
+  color: #fff;
+}
+
+.window-body { padding: 17px; }
+
+.stage {
+  background: #edb3c9;
+  padding: 8px;
+  border: 3px inset #ae6d87;
+}
+
+#canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  background: #fff4e5;
+}
+
+.settings {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+}
+
+.fields label {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.fields label:has(input[type="checkbox"]) {
+  flex-direction: row;
+  align-items: center;
+}
+
+select, textarea, input[type="color"] {
+  width: 100%;
+  border: 2px solid #bc8197;
+  background: #fffaf5;
+  color: var(--ink);
+  padding: 8px;
+  border-radius: 5px;
+  font: inherit;
+}
+
+textarea { resize: vertical; }
+
+input[type="color"] {
+  height: 40px;
+  cursor: pointer;
+}
+
+input[type="checkbox"] {
+  accent-color: var(--darkpink);
+  width: 17px;
+  height: 17px;
+}
+
+button {
+  border: 3px solid #943b5d;
+  background: linear-gradient(#ffd6e3, #f0a1bd);
+  color: #78334d;
+  border-radius: 24px;
+  padding: 11px 16px;
+  cursor: pointer;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 900;
+  box-shadow: 2px 4px 0 #a7647f;
+  transition: transform .12s, box-shadow .12s;
+}
+
+button:hover:not(:disabled) {
+  background: #ffe5ec;
+  transform: translateY(-2px);
+}
+
+button:active:not(:disabled) {
+  transform: translateY(3px);
+  box-shadow: none;
+}
+
+button:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+.controls {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 17px;
+}
+
+#recordBtn {
+  background: #d84f70;
+  color: white;
+}
+
+#drawing {
+  width: 100%;
+  height: auto;
+  background: #fff;
+  border: 2px dashed #b87991;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+#status {
+  text-align: center;
+  font-size: 13px;
+  color: #98546b;
+}
+
+footer {
+  text-align: center;
+  font-size: 13px;
+  padding: 20px;
+}
+
+@media (max-width: 850px) {
+  .desktop { grid-template-columns: 1fr; }
+  .topbar { flex-wrap: wrap; }
+}
+
+/* V0.2: controles de scrapbook */
+fieldset { border: 2px dashed #bc8197; display: grid; gap: 12px; min-width: 0; }
+legend { font-weight: 800; }
+input[type="range"] { width: 100%; accent-color: var(--darkpink); }
+.sprite-palette { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.sprite-palette button { padding: 5px; border-radius: 8px; background: #fffaf5; }
+.sprite-palette canvas { width: 100%; height: auto; display: block; }
+.hint, #assetStatus { font-size: 12px; margin: 0; }
+#canvas { touch-action: none; }
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 3px solid #78334d; outline-offset: 3px; }
+@media (min-width: 851px) { .studio { position: sticky; top: 20px; } }
+
+/* Respeita a categoria selecionada mesmo em painéis com display: grid. */
+[hidden] { display: none !important; }
+#mirrorPalette .hint { margin-top: 10px; }

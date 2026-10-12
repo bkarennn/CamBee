@@ -1,0 +1,138 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cam Bee 🐝</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <span>🐝 Cam Bee <small>your little cover studio</small></span>
+    <span>♡ music can bee anything ♡</span>
+  </header>
+
+  <main class="desktop">
+    <section class="window studio">
+      <div class="window-title">
+        <span>✿ cambee.exe — my little studio</span>
+        <span>_ □ ×</span>
+      </div>
+
+      <div class="window-body">
+        <div class="stage">
+          <canvas id="canvas" width="960" height="540"></canvas>
+          <video id="webcam" autoplay muted playsinline hidden></video>
+        </div>
+
+        <div class="controls">
+          <button id="cameraBtn">📷 Ligar câmera</button>
+          <button id="recordBtn" disabled>🔴 Gravar</button>
+          <button id="stopBtn" disabled>■ Parar</button>
+        </div>
+        <p id="status" role="status" aria-live="polite">Câmera desligada ♡</p>
+      </div>
+    </section>
+
+    <aside class="settings">
+      <section class="window">
+        <div class="window-title">✿ Camera</div>
+        <div class="window-body fields">
+          <label>Filtro
+            <select id="filter">
+              <option value="none">Original</option>
+              <option value="bw">Preto e branco</option>
+              <option value="warm">Indie Film</option>
+              <option value="pink">Dreamy Pink</option>
+              <option value="blue">Blue Hour</option>
+              <option value="red">Cherry Red</option>
+              <option value="yellow">Golden Hour</option>
+              <option value="vintage">Vintage</option><option value="negative">Negative Film</option>
+            </select>
+          </label>
+
+          <label>Efeito
+            <select id="effect">
+              <option value="none">Nenhum</option>
+              <option value="stars">Estrelinhas</option>
+              <option value="sakura">Sakura Rain</option>
+              <option value="dots">Poá colorido</option>
+            </select>
+          </label>
+
+          <label>Moldura
+            <select id="shape">
+              <option value="wide">Larga</option>
+              <option value="square">Quadrada</option>
+              <option value="circle">Redonda</option>
+              <option value="heart">Coração</option>
+              <option value="star">Estrela</option><option value="cat">Gato</option><option value="rabbit">Coelho</option><option value="pizza">Pizza</option><option value="paper">Papel furado</option><option value="flower">Flor</option>
+            </select>
+          </label>
+
+          <label>Intensidade do negativo<input id="negativeAmount" type="range" min="0" max="100" value="100"></label>
+          <label>Tamanho da janelinha<input id="cameraSize" type="range" min="40" max="100" value="90"></label>
+          <label>Posição horizontal<input id="cameraX" type="range" min="0" max="100" value="50"></label>
+          <label>Posição vertical<input id="cameraY" type="range" min="0" max="100" value="50"></label>
+          <button id="centerCamera">Centralizar</button>
+          <fieldset><legend>Efeitos</legend>
+          <label>Quantidade<input id="effectCount" type="range" min="1" max="40" value="16"></label>
+          <label>Tamanho<input id="effectSize" type="range" min="10" max="90" value="35"></label>
+          <label>Intensidade<input id="effectAmount" type="range" min="0" max="100" value="85"></label>
+          <label>Cor das estrelas<input id="starColor" type="color" value="#ffe6a0"></label>
+          </fieldset>
+        </div></section>
+      <section class="window"><div class="window-title">✎ Background</div><div class="window-body fields">
+          <label>Fundo
+            <select id="background">
+              <option value="cream">Baunilha</option>
+              <option value="pink">Moranguinho</option>
+              <option value="blue">Céu azul</option>
+              <option value="red">Vermelho indie</option>
+              <option value="checkered">Xadrez</option>
+              <option value="draw">Meu desenho</option>
+            </select>
+          </label>
+
+          <label>Desenhar no fundo
+            <input id="penColor" type="color" value="#ed6483">
+          </label>
+          <canvas id="drawing" width="320" height="180"></canvas>
+          <button id="clearDrawing">Apagar desenho</button>
+        </div>
+      </section>
+
+      <section class="window"><div class="window-title">♡ Decorations</div><div class="window-body fields">
+<label>Tipo de decoração<select id="decorationType"><option value="button">Botões</option><option value="mirror">Mirror Stars</option></select></label>
+<p class="hint">Arraste o item na composição. Use os controles abaixo para ajustar o item selecionado.</p>
+<div id="mirrorPalette" hidden><button id="addMirrorStar" type="button">☆ Adicionar Mirror Star</button><p class="hint">Recorte fixo com a webcam em negativo, na frente da câmera. Botões ficam no fundo.</p></div>
+<div id="decorationPalette" class="sprite-palette" aria-label="Botões de costura"></div>
+<p id="assetStatus" role="status">Carregando botões…</p>
+<label>Decoração selecionada<select id="decorationSelection"><option value="">Nenhuma</option></select></label>
+<label>Tamanho<input id="decorationSize" type="range" min="25" max="480" value="95" disabled></label>
+<label>Girar<input id="decorationRotation" type="range" min="-180" max="180" value="0" disabled></label>
+<button id="deleteDecoration" disabled>Excluir decoração</button>
+</div></section>
+<section class="window"><div class="window-title">♫ Lyrics & Chords</div>
+        <div class="window-body fields">
+          <label><input id="showLyrics" type="checkbox" checked> Mostrar letra</label>
+          <textarea id="lyrics" rows="5" placeholder="Cole a letra aqui...">my little song
+sing with me ♡</textarea>
+
+          <label><input id="showChords" type="checkbox"> Mostrar acordes</label>
+          <textarea id="chords" rows="3" placeholder="G  Em  C  D"></textarea>
+
+          <label>Tamanho do texto<input id="textSize" type="range" min="14" max="36" value="22"></label>
+          <label>Cor da letra
+            <input id="textColor" type="color" value="#612d42">
+          </label>
+        </div>
+      </section>
+    </aside>
+  </main>
+
+  <footer>made with ♡ and a little bee 🐝</footer>
+  <script src="script.js"></script>
+</body>
+</html>

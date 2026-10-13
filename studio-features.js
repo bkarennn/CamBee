@@ -187,6 +187,7 @@ async function connectDevices() {
 let studioDefaults=[];
 function reiniciarStudio() {
   if(cameraBusy || recordingPreparing || (recorder && recorder.state!=='inactive')) return;
+  stopSinging();
   for(const {element,value,checked} of studioDefaults) {
     element.value=value;
     if(element.type==='checkbox') element.checked=checked;
@@ -195,6 +196,8 @@ function reiniciarStudio() {
   // Reiniciar significa uma composição limpa, sem o texto de demonstração.
   ['songTitle','lyrics','chords','backgroundFile'].forEach(id=>$(id).value='');
   $('showLyrics').checked=false;$('showChords').checked=false;
+  resetSinging();
+  updateSingingProvider();
   $('removeBackground').onclick(); // Invalida importações pendentes e libera suas URLs.
   drawingActive=false;lastPoint=null;
   pen.clearRect(0,0,drawing.width,drawing.height);

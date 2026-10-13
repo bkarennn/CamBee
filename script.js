@@ -483,11 +483,13 @@ function drawLyrics() {
     const lines=wrappedLines($('lyrics').value,345,font);
     const height=460-top,automatic=$('lyricsScrollMode').value==='auto';
     const distance=height+lines.length*lineHeight;
-    const offset=atualizarRolagemLetra(now,distance,true);
+    const following=singState.following && $('singFollow').checked;
+    const offset=following?0:atualizarRolagemLetra(now,distance,true);
+    if(following) lyricMotion.lastTime=now;
     ctx.save();ctx.beginPath();ctx.rect(560,top,370,height);ctx.clip();
     ctx.globalAlpha=opacidadeLetra(now);ctx.font=font;
-    const firstY=automatic?460-offset:top+lineHeight;
-    lines.forEach((line,i)=>{const y=firstY+i*lineHeight;if(y>=top-lineHeight && y<=460+lineHeight)ctx.fillText(line,textX,y);});
+    const firstY=following?top+lineHeight:automatic?460-offset:top+lineHeight;
+    drawSingingLyrics(lines,textX,firstY,lineHeight,top,now,following);
     ctx.restore();
   } else lyricMotion.lastTime=now;
   ctx.restore();
@@ -704,7 +706,7 @@ function updateDecorationControls() {
 const decorationTypes = {
   button: {
     layer: 'background',
-    label: d => spriteDefinitions[d.sprite][0],
+    label: d => d.type==='collage' ? collageItems[d.item].name : spriteDefinitions[d.sprite][0],
     draw(d) {
       const sprite=sprites[d.sprite];
       if (!sprite) return;
@@ -740,7 +742,7 @@ const decorationTypes = {
 };
 function decorationHeight(d) {
   const sprite=sprites[d.sprite];
-  return d.type==='button' && sprite ? d.size*sprite.height/sprite.width : d.size;
+  return d.type!=='mirror' && sprite ? d.size*sprite.height/sprite.width : d.size;
 }
 function mirrorStarPath(d) { starPath(d.x,d.y,d.size/2,d.rotation*Math.PI/180); }
 function addDecoration(type, properties = {}) {
@@ -760,11 +762,85 @@ function drawDecorations(layer) {
 }
 $('decorationType').onchange=()=>{
   const mirror=$('decorationType').value==='mirror';
+  const collage=$('decorationType').value==='collage';
+  $('collagePalette').hidden=!collage;
+  $('collageStatus').hidden=!collage;
   $('mirrorPalette').hidden=!mirror;
-  $('decorationPalette').hidden=mirror;
-  $('assetStatus').hidden=mirror;
+  $('decorationPalette').hidden=mirror || collage;
+  $('assetStatus').hidden=mirror || collage;
 };
 $('addMirrorStar').onclick=()=>addDecoration('mirror');
+
+
+// Colagens compartilham desenho, seleção e manipulação com os botões.
+decorationTypes.collage=decorationTypes.button;
+const collageItems=[
+  {name:'Papel pautado rasgado',file:'baixados.jpeg',crop:[55,48,632,514],size:280},
+  {name:'Etiqueta Hello, I am',file:'baixados (1).jpeg',crop:[60,198,616,343],size:220},
+  {name:'Coração de papel rosa',file:'baixados (2).jpeg',crop:[88,10,548,619],size:165},
+  {name:'Disco de vinil',file:'download (4).jpeg',crop:[4,242,729,729],circle:true,size:210},
+  {name:'Exclamação roxa',crop:[40,35,110,247],size:70},
+  {name:'Interrogação coral',crop:[164,26,163,263],size:90},
+  {name:'Coração rosa recortado',crop:[333,51,202,194],size:145},
+  {name:'Interrogação amarela',crop:[549,39,165,238],size:90},
+  {name:'Coração verde grande',crop:[399,239,237,207],size:160},
+  {name:'Coração rosa em camadas',crop:[485,439,242,255],size:160},
+  {name:'Coração coral em camadas',crop:[248,559,239,219],size:150},
+  {name:'Coração verde pequeno',crop:[457,747,180,159],size:115},
+  {name:'Estrela roxa e amarela',crop:[246,796,218,176],size:145},
+  {name:'Estrela rosa e azul',crop:[524,879,198,183],size:145},
+  {name:'Coração amarelo',crop:[248,981,217,175],size:145},
+  {name:'Coração amarelo grande',crop:[432,1083,242,224],size:165},
+  {name:'Estrela coral e rosa',crop:[7,278,210,265],size:155,outline:[[137,4],[154,10],[135,91],[182,55],[207,65],[158,128],[200,141],[151,167],[152,213],[118,183],[112,253],[89,260],[81,200],[41,253],[25,235],[44,169],[0,158],[7,142],[54,131],[39,66],[54,55],[78,99]]},
+  {name:'Estrela verde e lilás',crop:[188,277,240,278],size:160,outline:[[119,0],[149,98],[224,99],[176,152],[240,218],[164,199],[167,260],[121,215],[56,278],[37,218],[52,177],[0,125],[55,119],[38,52],[82,96]]},
+  {name:'Estrela verde e amarela',crop:[4,538,229,270],size:150,outline:[[142,0],[165,9],[149,81],[182,63],[199,80],[160,127],[226,123],[229,151],[164,177],[183,226],[158,244],[123,213],[117,269],[93,268],[80,221],[47,263],[30,247],[53,181],[0,164],[9,146],[62,134],[44,66],[57,56],[92,94]]},
+  {name:'Interrogação azul e verde',crop:[28,817,169,263],size:90},
+  {name:'Interrogação rosa',crop:[3,1134,307,173],size:180}
+];
+// Imagens são decodificadas uma vez e os sprites transparentes ficam em memória.
+const collageImages=new Map();
+function collageImage(file) {
+  if(!collageImages.has(file)) collageImages.set(file,new Promise((resolve,reject)=>{
+    const image=new Image();image.onload=()=>resolve(image);image.onerror=()=>reject(new Error(file));image.src='assets/'+file;
+  }));
+  return collageImages.get(file);
+}
+async function loadCollages() {
+  const results=await Promise.allSettled(collageItems.map(async(item,index)=>{
+    const image=await collageImage(item.file || 'baixados (3).jpeg');
+    const [x,y,w,h]=item.crop;
+    const tile=document.createElement('canvas');tile.width=w;tile.height=h;
+    const c=tile.getContext('2d',{willReadFrequently:true});
+    if(item.outline) {c.beginPath();item.outline.forEach(([px,py],i)=>i?c.lineTo(px,py):c.moveTo(px,py));c.closePath();c.clip();}
+    if(item.circle) {c.beginPath();c.ellipse(w/2,h/2,w/2-3,h/2-3,0,0,Math.PI*2);c.clip();}
+    c.drawImage(image,x,y,w,h,0,0,w,h);
+    if(!item.circle) {
+      const pixels=c.getImageData(0,0,w,h),data=pixels.data;
+      // Só remove branco externo conectado à borda. Preserva papel e texto internos.
+      const seen=new Uint8Array(w*h),queue=new Int32Array(w*h);let head=0,tail=0;
+      const visit=p=>{if(seen[p])return;seen[p]=1;const k=p*4;
+        if(Math.min(data[k],data[k+1],data[k+2])<246)return;queue[tail++]=p;};
+      for(let xx=0;xx<w;xx++){visit(xx);visit((h-1)*w+xx);}
+      for(let yy=0;yy<h;yy++){visit(yy*w);visit(yy*w+w-1);}
+      while(head<tail){const p=queue[head++];data[p*4+3]=0;
+        if(p%w)visit(p-1);if(p%w<w-1)visit(p+1);if(p>=w)visit(p-w);if(p<w*(h-1))visit(p+w);}
+      c.putImageData(pixels,0,0);
+    }
+    sprites['collage-'+index]=tile;
+    return {tile,index,item};
+  }));
+  let loaded=0;
+  results.forEach(result=>{
+    if(result.status!=='fulfilled'){console.warn('[Cam Bee] Colagem',result.reason);return;}
+    const {tile,index,item}=result.value;
+    const button=document.createElement('button');button.type='button';button.title=item.name;
+    button.setAttribute('aria-label','Adicionar '+item.name);button.append(tile);
+    button.onclick=()=>addDecoration('collage',{sprite:'collage-'+index,item:index,size:item.size,y:100});
+    $('collagePalette').append(button);loaded++;
+  });
+  $('collageStatus').textContent=loaded===collageItems.length?loaded+' colagens disponíveis. Arraste e ajuste como os botões.':loaded+' colagens carregadas. Confira os assets e abra por localhost ou HTTPS para carregar os recortes.';
+}
+loadCollages();
 
 const sheet = new Image();
 sheet.onload = () => {
@@ -848,4 +924,5 @@ $('centerCamera').onclick=()=>{$('cameraX').value=50;$('cameraY').value=50;};
 syncEffectSize();
 initializeStudio();
 initializeLyricsMotion();
+initializeSinging();
 render();

@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&amp;family=DM+Mono&amp;family=Fredoka:wght@400;700&amp;family=Nunito:wght@400;600;700;800;900&amp;family=Patrick+Hand&amp;family=Pixelify+Sans:wght@400;700&amp;family=Press+Start+2P&amp;family=Quicksand:wght@400;700&amp;family=Silkscreen:wght@400;700&amp;display=swap">
-  <link rel="stylesheet" href="style.css?v=0.4">
+  <link rel="stylesheet" href="style.css?v=0.6">
 </head>
 <body>
   <header class="topbar">
@@ -126,9 +126,11 @@
       </section>
 
       <section class="window"><div class="window-title">♡ Decorations</div><div class="window-body fields">
-<label>Tipo de decoração<select id="decorationType"><option value="button">Botões</option><option value="mirror">Mirror Stars</option></select></label>
+<label>Tipo de decoração<select id="decorationType"><option value="button">Botões</option><option value="collage">Colagens — discos e papéis</option><option value="mirror">Mirror Stars</option></select></label>
 <p class="hint">Arraste o item na composição. Use os controles abaixo para ajustar o item selecionado.</p>
 <div id="mirrorPalette" hidden><button id="addMirrorStar" type="button">☆ Adicionar Mirror Star</button><p class="hint">Recorte fixo com a webcam em negativo, na frente da câmera. Botões ficam no fundo.</p></div>
+<div id="collagePalette" class="sprite-palette" aria-label="Discos, papéis e recortes" hidden></div>
+<p id="collageStatus" class="hint" role="status" hidden>Carregando colagens…</p>
 <div id="decorationPalette" class="sprite-palette" aria-label="Botões de costura"></div>
 <p id="assetStatus" role="status">Carregando botões…</p>
 <label>Decoração selecionada<select id="decorationSelection"><option value="">Nenhuma</option></select></label>
@@ -142,6 +144,20 @@
           <label><input id="showLyrics" type="checkbox" checked> Mostrar letra</label>
           <textarea id="lyrics" rows="5" placeholder="Cole a letra aqui...">my little song
 sing with me ♡</textarea>
+          <p id="singPrepared" class="hint" role="status">Cole uma letra para preparar o acompanhamento.</p>
+
+          <fieldset><legend>Cantar com a letra</legend>
+            <label>Reconhecimento<select id="singProvider"><option value="browser">Navegador</option><option value="just-sing">Just Sing (servidor)</option></select></label>
+            <label id="singServerField" hidden>Servidor Just Sing<input id="singServer" type="url" value="ws://localhost:3000/sing/ws/transcription"></label>
+            <label id="singLanguageField">Idioma da música<select id="singLanguage"><option value="pt-BR">Português</option><option value="en-US">Inglês</option><option value="es-ES">Espanhol</option></select></label>
+            <label><input id="singFollow" type="checkbox" checked> Acompanhar a letra com minha voz</label>
+            <div class="lyric-actions"><button id="startSinging" type="button">Começar a cantar</button><button id="stopSinging" type="button" disabled>Parar</button><button id="resetSinging" type="button">Voltar ao início</button></div>
+            <p id="singStatus" class="hint" role="status">Cole a letra e clique em Começar a cantar.</p>
+            <p id="singProgress" class="hint">Progresso da letra: 0%</p>
+            <p class="hint">A letra acompanha o trecho mais provável do seu canto, mesmo com palavras diferentes ou não reconhecidas.</p>
+            <p class="hint">Ouvi: <span id="singHeard">—</span></p>
+            <p id="singPrivacy" class="hint">O reconhecimento usa o microfone padrão e pode enviar áudio ao serviço do navegador. Use fones para evitar reconhecer a música de fundo.</p>
+          </fieldset>
 
           <label><input id="showChords" type="checkbox"> Mostrar acordes</label>
           <textarea id="chords" rows="3" placeholder="G  Em  C  D"></textarea>
@@ -175,7 +191,8 @@ sing with me ♡</textarea>
 
   <footer>made with ♡ and a little bee 🐝</footer>
   <script src="lyrics-motion.js?v=0.4"></script>
-  <script src="studio-features.js?v=0.5.2"></script>
-  <script src="script.js?v=0.5.2"></script>
+  <script src="lyrics-sing.js?v=0.6.3"></script>
+  <script src="studio-features.js?v=0.6"></script>
+  <script src="script.js?v=0.6"></script>
 </body>
 </html>

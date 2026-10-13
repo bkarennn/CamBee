@@ -237,6 +237,8 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 fieldset { border-radius: 8px; padding: 12px; }
 legend { color: var(--purple-dark); padding: 0 6px; }
 .lyric-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+#singServerField[hidden], #singLanguageField[hidden] { display: none; }
+#startSinging { background: var(--honey); color: var(--purple-dark); }
 .lyric-actions button { flex: 1 1 110px; padding: 9px; }
 output { color: var(--purple); font-family: 'DM Mono', monospace; }
 input[type="range"] { min-height: 24px; }

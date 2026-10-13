@@ -763,11 +763,14 @@ function drawDecorations(layer) {
 $('decorationType').onchange=()=>{
   const mirror=$('decorationType').value==='mirror';
   const collage=$('decorationType').value==='collage';
+  const letters=$('decorationType').value==='letters';
+  $('lettersPalette').hidden=!letters;
+  $('lettersStatus').hidden=!letters;
   $('collagePalette').hidden=!collage;
   $('collageStatus').hidden=!collage;
   $('mirrorPalette').hidden=!mirror;
-  $('decorationPalette').hidden=mirror || collage;
-  $('assetStatus').hidden=mirror || collage;
+  $('decorationPalette').hidden=mirror || collage || letters;
+  $('assetStatus').hidden=mirror || collage || letters;
 };
 $('addMirrorStar').onclick=()=>addDecoration('mirror');
 
@@ -797,6 +800,16 @@ const collageItems=[
   {name:'Interrogação azul e verde',crop:[28,817,169,263],size:90},
   {name:'Interrogação rosa',crop:[3,1134,307,173],size:180}
 ];
+
+// Recortes individuais das duas cartelas; letras repetidas podem ser adicionadas livremente.
+const paperLetterSheets = [
+  {file:'baixados (4).jpeg',style:'colorida',crops:[[12,20,94,135],[106,20,84,133],[190,20,95,137],[285,20,88,135],[373,20,87,135],[461,20,78,135],[540,20,101,137],[13,163,92,145],[107,162,72,145],[180,162,83,145],[264,163,96,145],[361,163,76,145],[438,163,108,145],[548,163,92,145],[11,311,96,140],[108,311,83,140],[192,311,98,140],[290,311,88,140],[379,311,82,140],[462,311,89,140],[552,311,92,140],[13,455,110,148],[124,455,143,148],[268,455,116,148],[385,455,124,148],[510,455,125,148]]},
+  {file:'baixados (5).jpeg',style:'revista',crops:[[236,7,76,118],[498,10,115,112],[206,151,100,105],[325,145,115,108],[107,279,94,96],[398,266,92,128],[107,380,97,117],[300,398,106,109],[13,509,77,129],[299,527,94,124],[14,644,96,136],[320,657,96,118],[133,782,111,98],[359,783,90,103],[188,883,119,120],[392,897,84,114],[109,1013,96,115],[346,1017,101,119],[553,1024,79,103],[308,1164,95,107],[610,1174,104,106],[630,478,75,106],[618,306,116,82],[651,794,79,91],[646,975,86,89],[639,1066,83,95]]}
+];
+for(const sheet of paperLetterSheets) sheet.crops.forEach((crop,index)=>{
+  collageItems.push({name:'Letra '+String.fromCharCode(65+index)+' — '+sheet.style,file:sheet.file,crop,size:70,category:'letters'});
+});
+
 // Imagens são decodificadas uma vez e os sprites transparentes ficam em memória.
 const collageImages=new Map();
 function collageImage(file) {
@@ -829,16 +842,23 @@ async function loadCollages() {
     sprites['collage-'+index]=tile;
     return {tile,index,item};
   }));
-  let loaded=0;
+  let loaded=0, lettersLoaded=0;
   results.forEach(result=>{
     if(result.status!=='fulfilled'){console.warn('[Cam Bee] Colagem',result.reason);return;}
     const {tile,index,item}=result.value;
     const button=document.createElement('button');button.type='button';button.title=item.name;
     button.setAttribute('aria-label','Adicionar '+item.name);button.append(tile);
     button.onclick=()=>addDecoration('collage',{sprite:'collage-'+index,item:index,size:item.size,y:100});
-    $('collagePalette').append(button);loaded++;
+    if(item.category==='letters') { $('lettersPalette').append(button);lettersLoaded++; }
+    else { $('collagePalette').append(button);loaded++; }
   });
-  $('collageStatus').textContent=loaded===collageItems.length?loaded+' colagens disponíveis. Arraste e ajuste como os botões.':loaded+' colagens carregadas. Confira os assets e abra por localhost ou HTTPS para carregar os recortes.';
+  const collageCount=collageItems.filter(item=>item.category!=='letters').length;
+  $('collageStatus').textContent=loaded+' de '+collageCount+' colagens disponíveis.';
+  $('lettersStatus').textContent=lettersLoaded+' de 52 letras disponíveis. Adicione letras para montar palavras; arraste e ajuste como os botões.';
+  if(loaded+lettersLoaded<collageItems.length) {
+    const warning=' Alguns recortes falharam. Confira os assets e abra por localhost ou HTTPS.';
+    $('collageStatus').textContent+=warning;$('lettersStatus').textContent+=warning;
+  }
 }
 loadCollages();
 
